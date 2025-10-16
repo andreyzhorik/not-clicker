@@ -45,8 +45,9 @@
   input[type="text"]{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;}
   .small{font-size:13px;color:var(--muted);}
   footer{font-size:12px;color:var(--muted);padding-top:6px;}
-  .flash{position:fixed;left:50%;transform:translateX(-50%);top:24px;background:#042029;padding:10px 14px;border-radius:8px;color:var(--accent-2);box-shadow:0 8px 30px rgba(3,12,18,0.7);display:none;}
+  .flash{position:fixed;left:50%;transform:translateX(-50%);top:24px;background:#042029;padding:10px 14px;border-radius:8px;color:var(--accent-2);box-shadow:0 8px 30px rgba(3,12,18,0.7);display:none;z-index:999;}
   .show{display:block;}
+  .auto-status{font-size:12px;color:var(--muted);margin-top:8px;}
   @media (max-width:960px){
     .wrap{grid-template-columns:1fr;max-width:760px;}
     aside{order:-1;}
@@ -128,6 +129,10 @@
         <button id="clearLocal" class="btn secondary">Clear Local Save</button>
       </div>
 
+      <div class="auto-status" id="autoStatus">
+        Auto-refresh: On • Auto-submit: On
+      </div>
+
       <div class="small" style="margin-top:8px;color:var(--muted);">
         Scores submitted to remote leaderboard API: https://68eeed86b06cc802829ba196.mockapi.io/leaderboardclicker
       </div>
@@ -140,9 +145,10 @@
 <script>
 (() => {
   const API_BASE = 'https://68eeed86b06cc802829ba196.mockapi.io/leaderboardclicker';
-  const STORAGE_KEY = 'notcoins_state_v1';
-  const NAME_KEY = 'notcoins_player';
-  const LOCK_KEY = 'notcoins_name_locked';
+  const STORAGE_KEY = 'notcoins_state_v2';
+  const NAME_KEY = 'notcoins_player_v2';
+  const LOCK_KEY = 'notcoins_name_locked_v2';
+  const LAST_SUBMIT_KEY = 'notcoins_last_submitted_score_v2';
 
   // initial state
   let state = {
@@ -153,15 +159,24 @@
     items: {}, // id => count
     boughtCount: 0,
     lastSave: null,
+    playStart: Date.now()
   };
 
+  // expanded shop - mixture of click, cps, and multipliers
   const shopItems = [
     { id: 'cursor', name: 'Cursor', desc: '+1 per click', basePrice: 15, type: 'click', value: 1 },
-    { id: 'grandma', name: 'Grandma', desc: '+1 CPS', basePrice: 100, type: 'cps', value: 1 },
-    { id: 'factory', name: 'Factory', desc: '+10 CPS', basePrice: 1000, type: 'cps', value: 10 },
-    { id: 'mult', name: 'Click Booster', desc: '+0.5 click value', basePrice: 500, type: 'clickMult', value: 0.5 }
+    { id: 'auto_clicker', name: 'Auto-Clicker', desc: 'Auto clicks for you (+0.5 cps)', basePrice: 75, type: 'cps', value: 0.5 },
+    { id: 'grandma', name: 'Grandma', desc: '+2 CPS', basePrice: 120, type: 'cps', value: 2 },
+    { id: 'miner', name: 'Miner', desc: '+8 CPS', basePrice: 550, type: 'cps', value: 8 },
+    { id: 'factory', name: 'Factory', desc: '+40 CPS', basePrice: 3000, type: 'cps', value: 40 },
+    { id: 'bank', name: 'Bank', desc: '+200 CPS', basePrice: 15000, type: 'cps', value: 200 },
+    { id: 'mult_small', name: 'Tiny Multiplier', desc: 'x1.2 click value', basePrice: 500, type: 'mult', value: 1.2 },
+    { id: 'mult_medium', name: 'Click Booster', desc: 'x1.5 click value', basePrice: 2500, type: 'mult', value: 1.5 },
+    { id: 'quantum', name: 'Quantum Chip', desc: 'x2 click value', basePrice: 12000, type: 'mult', value: 2 },
+    { id: 'orbital', name: 'Orbital Factory', desc: '+2000 CPS', basePrice: 90000, type: 'cps', value: 2000 },
+    { id: 'research', name: 'Research Lab', desc: 'Reduces all prices by 5% (stackable)', basePrice: 8000, type: 'discount', value: 0.05 }
   ];
-  const priceScale = 1.15;
+  const priceScale = 1.17;
 
   // DOM
   const balanceEl = document.getElementById('balance');
@@ -181,6 +196,13 @@
   const submitScoreBtn = document.getElementById('submitScore');
   const clearLocalBtn = document.getElementById('clearLocal');
   const flashEl = document.getElementById('flash');
+  const autoStatusEl = document.getElementById('autoStatus');
+
+  // autos
+  const LEADERBOARD_REFRESH_MS = 30_000; // 30s
+  const AUTO_SUBMIT_MS = 60_000; // 60s
+  let lbInterval = null;
+  let submitInterval = null;
 
   // utils
   function showFlash(msg, time=2200){
@@ -218,6 +240,8 @@
   }
 
   function format(n){
+    if (isNaN(n) || !isFinite(n)) return '0';
+    if(n >= 1e12) return (n/1e12).toFixed(2)+'T';
     if(n >= 1e9) return (n/1e9).toFixed(2)+'B';
     if(n >= 1e6) return (n/1e6).toFixed(2)+'M';
     if(n >= 1e3) return (n/1e3).toFixed(2)+'k';
@@ -227,7 +251,14 @@
   function calcPrice(itemId){
     const item = shopItems.find(i=>i.id===itemId);
     const count = state.items[itemId] || 0;
-    return Math.floor(item.basePrice * Math.pow(priceScale, count));
+    let price = Math.floor(item.basePrice * Math.pow(priceScale, count));
+    // apply discounts from research items
+    const researchCount = state.items['research'] || 0;
+    if(researchCount > 0){
+      const totalDisc = 1 - Math.pow(1 - shopItems.find(i=>i.id==='research').value, researchCount);
+      price = Math.max(1, Math.floor(price * (1 - totalDisc)));
+    }
+    return price;
   }
 
   // rendering
@@ -261,10 +292,13 @@
         </div>
       `;
       const btn = div.querySelector('button');
-      if(state.balance < price) btn.disabled = true;
+      btn.disabled = state.balance < price;
       btn.addEventListener('click', ()=> buyItem(item.id));
       shopListEl.appendChild(div);
     }
+
+    // update auto status
+    autoStatusEl.textContent = `Auto-refresh: On (every ${LEADERBOARD_REFRESH_MS/1000}s) • Auto-submit: On (every ${AUTO_SUBMIT_MS/1000}s)`;
   }
 
   // game actions
@@ -286,15 +320,17 @@
       state.clickValue += item.value;
     } else if(item.type === 'cps'){
       state.cps += item.value;
-    } else if(item.type === 'clickMult'){
-      state.clickValue = +(state.clickValue + item.value).toFixed(2);
+    } else if(item.type === 'mult'){
+      state.clickValue = +(state.clickValue * item.value).toFixed(6);
+    } else if(item.type === 'discount'){
+      // discount handled in calcPrice
     }
     saveState();
     render();
     showFlash('Purchased ' + item.name);
   }
 
-  // CPS loop
+  // CPS loop (runs every second)
   setInterval(()=>{
     if(state.cps > 0){
       state.balance += state.cps;
@@ -308,7 +344,6 @@
   // clicks
   clickBtn.addEventListener('click', ()=>{
     clickAction();
-    // tiny animation
     clickBtn.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}],{duration:150});
   });
 
@@ -326,14 +361,15 @@
     showFlash('Name set: ' + val);
   });
 
-  // clear local save - this will also unlock name (keeps user aware)
+  // clear local save - this will also unlock name
   clearLocalBtn.addEventListener('click', ()=>{
     if(!confirm('Clear local save and reset all progress? This cannot be undone.')) return;
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(NAME_KEY);
     localStorage.removeItem(LOCK_KEY);
+    localStorage.removeItem(LAST_SUBMIT_KEY);
     // reset state
-    state = { balance:0, totalClicks:0, clickValue:1, cps:0, items:{}, boughtCount:0, lastSave:null };
+    state = { balance:0, totalClicks:0, clickValue:1, cps:0, items:{}, boughtCount:0, lastSave:null, playStart:Date.now() };
     nameInput.disabled = false;
     setNameBtn.disabled = false;
     nameInput.value = '';
@@ -349,7 +385,6 @@
       const res = await fetch(API_BASE);
       if(!res.ok) throw new Error('Network error');
       const data = await res.json();
-      // ensure list sorted desc by score
       data.sort((a,b)=>Number(b.score) - Number(a.score));
       renderLeaderboard(data);
     }catch(e){
@@ -363,7 +398,6 @@
       leaderBoardEl.innerHTML = '<div class="small" style="padding:8px;color:var(--muted)">No entries yet.</div>';
       return;
     }
-    // show top 10
     list.slice(0,10).forEach((row, idx) => {
       const div = document.createElement('div');
       div.className = 'lb-row';
@@ -372,12 +406,13 @@
     });
   }
 
-  async function submitScore(){
+  async function submitScoreOnce(){
     const name = localStorage.getItem(NAME_KEY) || nameInput.value.trim() || 'Guest';
-    const score = Math.floor(state.balance + state.totalClicks * 0); // using balance as score
-    const payload = { name, score };
-    submitScoreBtn.disabled = true;
-    submitScoreBtn.textContent = 'Submitting...';
+    const score = Math.floor(state.balance);
+    const lastSubmitted = Number(localStorage.getItem(LAST_SUBMIT_KEY) || 0);
+    // only submit if score increased
+    if(score <= lastSubmitted) return false;
+    const payload = { name, score, date: new Date().toISOString() };
     try{
       const res = await fetch(API_BASE, {
         method: 'POST',
@@ -385,29 +420,60 @@
         body: JSON.stringify(payload)
       });
       if(!res.ok) throw new Error('Failed to submit');
+      localStorage.setItem(LAST_SUBMIT_KEY, String(score));
+      return true;
+    }catch(e){
+      return false;
+    }
+  }
+
+  async function submitScoreManual(){
+    submitScoreBtn.disabled = true;
+    submitScoreBtn.textContent = 'Submitting...';
+    const ok = await submitScoreOnce();
+    if(ok) {
       showFlash('Score submitted');
       await fetchLeaderboard();
-    }catch(e){
-      showFlash('Submit failed');
-    }finally{
-      submitScoreBtn.disabled = false;
-      submitScoreBtn.textContent = 'Submit Score';
+    } else {
+      showFlash('Submit failed or score not higher than last submission');
     }
+    submitScoreBtn.disabled = false;
+    submitScoreBtn.textContent = 'Submit Score';
+  }
+
+  submitScoreBtn.addEventListener('click', submitScoreManual);
+
+  // automatic intervals
+  function startAutoIntervals(){
+    // leaderboard auto refresh
+    if(lbInterval) clearInterval(lbInterval);
+    lbInterval = setInterval(fetchLeaderboard, LEADERBOARD_REFRESH_MS);
+    // auto-submit (only if local score increases)
+    if(submitInterval) clearInterval(submitInterval);
+    submitInterval = setInterval(async () => {
+      const ok = await submitScoreOnce();
+      if(ok){
+        showFlash('Auto-submitted improved score');
+        fetchLeaderboard();
+      }
+    }, AUTO_SUBMIT_MS);
   }
 
   // helpers
   function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 
-  // events
+  // manual refresh
   refreshLbBtn.addEventListener('click', fetchLeaderboard);
-  submitScoreBtn.addEventListener('click', submitScore);
 
-  // load & init
+  // init
   loadState();
   render();
   fetchLeaderboard();
-  // initial save timestamp
   saveState();
+  startAutoIntervals();
+
+  // Save on unload
+  window.addEventListener('beforeunload', ()=> saveState());
 })();
 </script>
 </body>
