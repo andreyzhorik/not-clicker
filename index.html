@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#071022;
+    --bg:#041021;
     --panel:#071726;
     --muted:#9aa6b5;
     --accent:#7EE0FF;
@@ -56,7 +56,7 @@
   <main class="card">
     <header>
       <h1>NotCoins</h1>
-      <div class="mini">dark • auto 2s</div>
+      <div class="mini">dark • auto 5s</div>
     </header>
 
     <div class="status">
@@ -84,7 +84,7 @@
 
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
       <div class="tiny">Shop</div>
-      <div class="tiny">Auto-update: On (2s)</div>
+      <div class="tiny">Auto-update: On (5s)</div>
     </div>
 
     <div id="shopList" class="shop" aria-live="polite"></div>
@@ -112,7 +112,7 @@
 
     <div style="display:flex;gap:8px;align-items:center">
       <button id="clearLocal" class="simple">Clear</button>
-      <div class="tiny">minimal UI • dark</div>
+      <div class="tiny">minimal • dark</div>
     </div>
   </aside>
 </div>
@@ -122,23 +122,32 @@
 <script>
 (() => {
   const API = 'https://68eeed86b06cc802829ba196.mockapi.io/leaderboardclicker';
-  const STORAGE = 'notcoins_dark_v1';
-  const NAME_KEY = 'notcoins_name_v1';
-  const LOCK_KEY = 'notcoins_name_lock_v1';
-  const LAST_SUB_KEY = 'notcoins_last_sub_v1';
-  const REFRESH_MS = 2000;
+  const STORAGE = 'notcoins_dark_v2';
+  const NAME_KEY = 'notcoins_name_v2';
+  const LOCK_KEY = 'notcoins_name_lock_v2';
+  const LAST_SUB_KEY = 'notcoins_last_sub_v2';
+  const REFRESH_MS = 5000; // now 5 seconds
 
+  // expanded shop
   const shop = [
     {id:'cursor', name:'Cursor', price:15, type:'click', val:1},
+    {id:'gloves', name:'Gloves', price:60, type:'click', val:5},
     {id:'auto', name:'Auto', price:80, type:'cps', val:0.5},
     {id:'grandma', name:'Grandma', price:140, type:'cps', val:2},
+    {id:'drone', name:'Drone', price:600, type:'cps', val:12},
     {id:'miner', name:'Miner', price:700, type:'cps', val:9},
-    {id:'mult', name:'Booster', price:500, type:'mult', val:1.2}
+    {id:'solar', name:'Solar Array', price:2200, type:'cps', val:60},
+    {id:'factory', name:'Factory', price:3500, type:'cps', val:45},
+    {id:'bank', name:'Bank', price:18000, type:'cps', val:250},
+    {id:'mult', name:'Booster', price:500, type:'mult', val:1.2},
+    {id:'exosuit', name:'Exosuit', price:4200, type:'mult', val:1.5},
+    {id:'quantum', name:'Quantum', price:22000, type:'mult', val:2},
+    {id:'ai', name:'AI Core', price:75000, type:'cps', val:1200}
   ];
   const SCALE = 1.15;
 
   let state = { balance:0, clicks:0, clickValue:1, cps:0, items:{}, lastSave:null };
-  let lbCache = []; // last fetched leaderboard
+  let lbCache = [];
 
   // DOM
   const balanceEl = document.getElementById('balance');
@@ -167,10 +176,12 @@
 
   function load(){
     const raw = localStorage.getItem(STORAGE);
-    if(raw) Object.assign(state, JSON.parse(raw));
+    if(raw) {
+      try{ Object.assign(state, JSON.parse(raw)); }catch(e){}
+    }
     const name = localStorage.getItem(NAME_KEY);
-    if(name){ playerNameEl.textContent = name; nameInput.value = name; nameInput.disabled = localStorage.getItem(LOCK_KEY) === '1'; setNameBtn.disabled = localStorage.getItem(LOCK_KEY) === '1'; }
-    applyDerived();
+    if(name){ playerNameEl.textContent = name; nameInput.value = name; const locked = localStorage.getItem(LOCK_KEY); if(locked === '1'){ nameInput.disabled = true; setNameBtn.disabled = true; } }
+    recalcFromItems();
   }
 
   function save(){
@@ -181,6 +192,7 @@
 
   function format(n){
     if(!isFinite(n)) return '0';
+    if(n>=1e12) return (n/1e12).toFixed(2)+'T';
     if(n>=1e9) return (n/1e9).toFixed(2)+'B';
     if(n>=1e6) return (n/1e6).toFixed(2)+'M';
     if(n>=1e3) return (n/1e3).toFixed(2)+'k';
@@ -194,13 +206,14 @@
     return Math.max(1, Math.floor(base * Math.pow(SCALE, cnt)));
   }
 
-  function applyDerived(){
-    // recalc cps from purchased cps items
-    let cps = 0;
+  function recalcFromItems(){
+    // recompute cps from items (sum of cps-type items)
+    let cpsSum = 0;
     shop.forEach(s=>{
-      if(s.type === 'cps') cps += (itemCount(s.id) * s.val);
+      if(s.type === 'cps') cpsSum += (itemCount(s.id) * s.val);
     });
-    state.cps = Math.max(state.cps, cps);
+    state.cps = +cpsSum.toFixed(6);
+    // clickValue: keep stored value (we apply multipliers on purchase; stored value is authoritative)
   }
 
   function render(){
@@ -239,7 +252,7 @@
     if(s.type === 'click') state.clickValue = +(state.clickValue + s.val);
     else if(s.type === 'cps') state.cps = +(state.cps + s.val);
     else if(s.type === 'mult') state.clickValue = +(state.clickValue * s.val);
-    applyDerived();
+    recalcFromItems();
     save();
     render();
     flash('Bought ' + s.name);
@@ -254,7 +267,7 @@
 
   setNameBtn.addEventListener('click', ()=>{
     const v = nameInput.value.trim();
-    if(!v) { flash('enter name'); return; }
+    if(!v){ flash('enter name'); return; }
     if(localStorage.getItem(LOCK_KEY) === '1'){ flash('name locked'); return; }
     localStorage.setItem(NAME_KEY, v);
     localStorage.setItem(LOCK_KEY, '1');
@@ -279,7 +292,7 @@
     flash('cleared');
   });
 
-  // Leaderboard operations
+  // Leaderboard
   async function fetchLB(){
     try{
       const res = await fetch(API);
@@ -306,16 +319,15 @@
     });
   }
 
+  // Update existing entry only (do not create new)
   async function tryUpdateScoreIfExists(){
     const name = localStorage.getItem(NAME_KEY) || nameInput.value.trim();
     if(!name) return;
-    // ensure we have fresh LB cache; we will fetch once per cycle anyway
     const list = lbCache.length ? lbCache : (await fetchLB());
     const existing = list.find(e => e.name === name);
-    if(!existing) return; // do not create new entry per user's request
+    if(!existing) return;
     const currentScore = Math.floor(state.balance);
     if(currentScore <= Number(existing.score)) return;
-    // update via PUT
     try{
       const res = await fetch(API + '/' + existing.id, {
         method: 'PUT',
@@ -327,11 +339,10 @@
       flash('score updated');
       await fetchLB();
     }catch(e){
-      // silently ignore
+      // ignore
     }
   }
 
-  // Manual update button: will update only if entry exists
   submitBtn.addEventListener('click', async ()=>{
     submitBtn.disabled = true;
     await fetchLB();
@@ -341,14 +352,11 @@
 
   refreshBtn.addEventListener('click', fetchLB);
 
-  // Auto loop every REFRESH_MS: refresh leaderboard, then try update (if entry exists and improved)
+  // Auto loop: refresh LB and update existing entry if improved — every REFRESH_MS (5s)
   async function autoLoop(){
     await fetchLB();
     await tryUpdateScoreIfExists();
   }
-
-  // utility
-  function escape(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
   // init
   load();
@@ -357,7 +365,7 @@
   save();
   setInterval(autoLoop, REFRESH_MS);
 
-  // keep CPS earnings every second
+  // CPS tick
   setInterval(()=>{
     if(state.cps > 0){
       state.balance += state.cps;
@@ -366,9 +374,11 @@
     }
   }, 1000);
 
-  // save periodically
+  // periodic save
   setInterval(save, 5000);
   window.addEventListener('beforeunload', save);
+
+  function escape(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 })();
 </script>
 </body>
