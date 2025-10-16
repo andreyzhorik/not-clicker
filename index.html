@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>NotCoins Clicker</title>
+<style>
+  :root{
+    --bg:#0f1724; --card:#0b1220; --accent:#00d4ff; --muted:#98a0b3; --accent-2:#7CFFB2;
+    --glass: rgba(255,255,255,0.03);
+  }
+  *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;}
+  body{margin:0;background:linear-gradient(180deg,#071020 0%, #081427 100%);color:#e6eef8;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;}
+  .wrap{width:100%;max-width:1100px;display:grid;grid-template-columns:1fr 380px;gap:20px;}
+  .card{background:linear-gradient(180deg,rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:18px;box-shadow:0 6px 18px rgba(4,12,24,0.6);border:1px solid rgba(255,255,255,0.03);}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  header h1{font-size:20px;margin:0;letter-spacing:0.3px;}
+  .main{display:flex;flex-direction:column;gap:12px;}
+  .status{display:flex;gap:8px;align-items:center;}
+  .notcoins{font-weight:700;font-size:28px;color:var(--accent);}
+  .sub{color:var(--muted);font-size:13px;}
+  .click-area{display:flex;gap:12px;align-items:center;}
+  .big-btn{flex:1;background:linear-gradient(180deg,var(--accent),#00a8c9);padding:26px;border-radius:12px;text-align:center;box-shadow:0 6px 14px rgba(0,212,255,0.12), inset 0 -6px 22px rgba(255,255,255,0.02);cursor:pointer;user-select:none;}
+  .big-btn:active{transform:translateY(2px) scale(0.997);}
+  .big-btn .value{font-size:28px;font-weight:800;}
+  .big-btn .label{font-size:13px;color:rgba(2,7,10,0.3);margin-top:6px;}
+  .info-row{display:flex;gap:12px;align-items:center;}
+  .pill{background:var(--glass);padding:8px 12px;border-radius:999px;font-size:13px;color:var(--muted);}
+  .shop{display:flex;flex-direction:column;gap:10px;margin-top:6px;}
+  .item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);border:1px solid rgba(255,255,255,0.02);}
+  .item .left{display:flex;gap:10px;align-items:center;}
+  .icon{width:44px;height:44px;border-radius:8px;background:linear-gradient(180deg,#07202B,#02323C);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent-2);}
+  .item .meta{display:flex;flex-direction:column;}
+  .item .meta .title{font-weight:700;}
+  .item .meta .desc{font-size:12px;color:var(--muted);}
+  .item button{padding:8px 12px;border-radius:8px;border:0;background:linear-gradient(180deg,#0B7A6D,#0A5B4A);color:white;cursor:pointer;font-weight:700;}
+  .item button[disabled]{opacity:0.45;cursor:not-allowed;background:linear-gradient(180deg,#22323A,#152025);}
+  aside{display:flex;flex-direction:column;gap:12px;}
+  .leaderboard{max-height:300px;overflow:auto;padding:10px;background:linear-gradient(180deg,rgba(255,255,255,0.015),transparent);border-radius:8px;}
+  .lb-row{display:flex;justify-content:space-between;padding:8px;border-radius:6px;margin-bottom:6px;background:rgba(255,255,255,0.01);}
+  .lb-row .name{font-weight:700;}
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .btn{padding:8px 12px;border-radius:8px;border:0;background:var(--accent);color:#042029;font-weight:800;cursor:pointer;}
+  .btn.secondary{background:#102334;color:var(--accent);}
+  input[type="text"]{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;}
+  .small{font-size:13px;color:var(--muted);}
+  footer{font-size:12px;color:var(--muted);padding-top:6px;}
+  .flash{position:fixed;left:50%;transform:translateX(-50%);top:24px;background:#042029;padding:10px 14px;border-radius:8px;color:var(--accent-2);box-shadow:0 8px 30px rgba(3,12,18,0.7);display:none;}
+  .show{display:block;}
+  @media (max-width:960px){
+    .wrap{grid-template-columns:1fr;max-width:760px;}
+    aside{order:-1;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <main class="card">
+    <header>
+      <h1>NotCoins Clicker</h1>
+      <div class="sub">Click to earn NotCoins. Name locked when set.</div>
+    </header>
+
+    <section class="main">
+      <div class="status">
+        <div>
+          <div class="sub">Player</div>
+          <div id="playerName" class="notcoins">Guest</div>
+        </div>
+        <div style="flex:1"></div>
+        <div>
+          <div class="sub">NotCoins</div>
+          <div id="balance" class="notcoins">0</div>
+          <div class="sub small">CPS: <span id="cps">0</span> • Click Value: <span id="clickVal">1</span></div>
+        </div>
+      </div>
+
+      <div class="click-area">
+        <div class="big-btn" id="clickBtn" title="Click!">
+          <div class="value" id="clickText">Tap me!</div>
+          <div class="label">+<span id="perClick">1</span> NotCoins per click</div>
+        </div>
+        <div style="width:160px;display:flex;flex-direction:column;gap:8px;">
+          <div class="pill">Total Clicks: <span id="totalClicks">0</span></div>
+          <div class="pill">Owned: <span id="ownedItems">0</span></div>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="pill">Saved locally</div>
+        <div class="pill" id="saveStateText">Last save: never</div>
+      </div>
+
+      <h3 style="margin:12px 0 6px 0;">Shop</h3>
+      <div class="shop" id="shopList">
+        <!-- shop items generated here -->
+      </div>
+
+      <footer>
+        Tip: Your player name is locked after you set it. To change it you must clear browser storage for this site.
+      </footer>
+    </section>
+  </main>
+
+  <aside class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div class="sub">Account</div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <input id="nameInput" type="text" placeholder="Enter player name" />
+          <button id="setNameBtn" class="btn">Set</button>
+        </div>
+        <div class="small" style="margin-top:6px;">Once set the name cannot be changed on this browser.</div>
+      </div>
+    </div>
+
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="sub">Leaderboard</div>
+        <div><button id="refreshLb" class="btn secondary">Refresh</button></div>
+      </div>
+      <div class="leaderboard" id="leaderboard">
+        <!-- leaderboard rows -->
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button id="submitScore" class="btn">Submit Score</button>
+        <button id="clearLocal" class="btn secondary">Clear Local Save</button>
+      </div>
+
+      <div class="small" style="margin-top:8px;color:var(--muted);">
+        Scores submitted to remote leaderboard API: https://68eeed86b06cc802829ba196.mockapi.io/leaderboardclicker
+      </div>
+    </div>
+  </aside>
+</div>
+
+<div id="flash" class="flash"></div>
+
+<script>
+(() => {
+  const API_BASE = 'https://68eeed86b06cc802829ba196.mockapi.io/leaderboardclicker';
+  const STORAGE_KEY = 'notcoins_state_v1';
+  const NAME_KEY = 'notcoins_player';
+  const LOCK_KEY = 'notcoins_name_locked';
+
+  // initial state
+  let state = {
+    balance: 0,
+    totalClicks: 0,
+    clickValue: 1,
+    cps: 0,
+    items: {}, // id => count
+    boughtCount: 0,
+    lastSave: null,
+  };
+
+  const shopItems = [
+    { id: 'cursor', name: 'Cursor', desc: '+1 per click', basePrice: 15, type: 'click', value: 1 },
+    { id: 'grandma', name: 'Grandma', desc: '+1 CPS', basePrice: 100, type: 'cps', value: 1 },
+    { id: 'factory', name: 'Factory', desc: '+10 CPS', basePrice: 1000, type: 'cps', value: 10 },
+    { id: 'mult', name: 'Click Booster', desc: '+0.5 click value', basePrice: 500, type: 'clickMult', value: 0.5 }
+  ];
+  const priceScale = 1.15;
+
+  // DOM
+  const balanceEl = document.getElementById('balance');
+  const cpsEl = document.getElementById('cps');
+  const clickValEl = document.getElementById('clickVal');
+  const clickBtn = document.getElementById('clickBtn');
+  const perClickEl = document.getElementById('perClick');
+  const totalClicksEl = document.getElementById('totalClicks');
+  const ownedItemsEl = document.getElementById('ownedItems');
+  const shopListEl = document.getElementById('shopList');
+  const saveStateText = document.getElementById('saveStateText');
+  const playerNameEl = document.getElementById('playerName');
+  const nameInput = document.getElementById('nameInput');
+  const setNameBtn = document.getElementById('setNameBtn');
+  const leaderBoardEl = document.getElementById('leaderboard');
+  const refreshLbBtn = document.getElementById('refreshLb');
+  const submitScoreBtn = document.getElementById('submitScore');
+  const clearLocalBtn = document.getElementById('clearLocal');
+  const flashEl = document.getElementById('flash');
+
+  // utils
+  function showFlash(msg, time=2200){
+    flashEl.textContent = msg;
+    flashEl.classList.add('show');
+    setTimeout(()=> flashEl.classList.remove('show'), time);
+  }
+
+  function saveState(){
+    state.lastSave = Date.now();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    saveStateText.textContent = 'Last save: ' + new Date(state.lastSave).toLocaleTimeString();
+  }
+
+  function loadState(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      try{
+        const parsed = JSON.parse(raw);
+        state = Object.assign(state, parsed);
+      }catch(e){}
+    }
+    const name = localStorage.getItem(NAME_KEY);
+    const locked = localStorage.getItem(LOCK_KEY);
+    if(name){
+      playerNameEl.textContent = name;
+      nameInput.value = name;
+    } else {
+      playerNameEl.textContent = 'Guest';
+    }
+    if(locked === '1'){
+      nameInput.disabled = true;
+      setNameBtn.disabled = true;
+    }
+  }
+
+  function format(n){
+    if(n >= 1e9) return (n/1e9).toFixed(2)+'B';
+    if(n >= 1e6) return (n/1e6).toFixed(2)+'M';
+    if(n >= 1e3) return (n/1e3).toFixed(2)+'k';
+    return Math.round(n).toString();
+  }
+
+  function calcPrice(itemId){
+    const item = shopItems.find(i=>i.id===itemId);
+    const count = state.items[itemId] || 0;
+    return Math.floor(item.basePrice * Math.pow(priceScale, count));
+  }
+
+  // rendering
+  function render(){
+    balanceEl.textContent = format(state.balance);
+    cpsEl.textContent = format(state.cps);
+    clickValEl.textContent = state.clickValue % 1 === 0 ? state.clickValue : state.clickValue.toFixed(2);
+    perClickEl.textContent = state.clickValue % 1 === 0 ? state.clickValue : state.clickValue.toFixed(2);
+    totalClicksEl.textContent = format(state.totalClicks);
+    ownedItemsEl.textContent = Object.values(state.items).reduce((a,b)=>a+b,0);
+    saveStateText.textContent = state.lastSave ? 'Last save: ' + new Date(state.lastSave).toLocaleTimeString() : 'Last save: never';
+
+    // render shop
+    shopListEl.innerHTML = '';
+    for(const item of shopItems){
+      const count = state.items[item.id] || 0;
+      const price = calcPrice(item.id);
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <div class="left">
+          <div class="icon">${item.name[0]}</div>
+          <div class="meta">
+            <div class="title">${item.name} <span style="font-weight:500;color:var(--muted);font-size:12px">x${count}</span></div>
+            <div class="desc">${item.desc}</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+          <div style="color:var(--muted);font-size:13px">${format(price)} NC</div>
+          <button data-id="${item.id}">Buy</button>
+        </div>
+      `;
+      const btn = div.querySelector('button');
+      if(state.balance < price) btn.disabled = true;
+      btn.addEventListener('click', ()=> buyItem(item.id));
+      shopListEl.appendChild(div);
+    }
+  }
+
+  // game actions
+  function clickAction(){
+    state.balance += state.clickValue;
+    state.totalClicks += 1;
+    render();
+  }
+
+  function buyItem(id){
+    const item = shopItems.find(i=>i.id===id);
+    const price = calcPrice(id);
+    if(state.balance < price) return;
+    state.balance -= price;
+    state.items[id] = (state.items[id]||0) + 1;
+    state.boughtCount += 1;
+    // apply effects
+    if(item.type === 'click'){
+      state.clickValue += item.value;
+    } else if(item.type === 'cps'){
+      state.cps += item.value;
+    } else if(item.type === 'clickMult'){
+      state.clickValue = +(state.clickValue + item.value).toFixed(2);
+    }
+    saveState();
+    render();
+    showFlash('Purchased ' + item.name);
+  }
+
+  // CPS loop
+  setInterval(()=>{
+    if(state.cps > 0){
+      state.balance += state.cps;
+      render();
+    }
+  }, 1000);
+
+  // autosave
+  setInterval(()=> saveState(), 5000);
+
+  // clicks
+  clickBtn.addEventListener('click', ()=>{
+    clickAction();
+    // tiny animation
+    clickBtn.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}],{duration:150});
+  });
+
+  // player name set - locked after set once
+  setNameBtn.addEventListener('click', ()=>{
+    const val = nameInput.value.trim();
+    if(!val) { showFlash('Enter a valid name'); return; }
+    const locked = localStorage.getItem(LOCK_KEY);
+    if(locked === '1'){ showFlash('Name is locked and cannot be changed'); return; }
+    localStorage.setItem(NAME_KEY, val);
+    localStorage.setItem(LOCK_KEY, '1');
+    nameInput.disabled = true;
+    setNameBtn.disabled = true;
+    playerNameEl.textContent = val;
+    showFlash('Name set: ' + val);
+  });
+
+  // clear local save - this will also unlock name (keeps user aware)
+  clearLocalBtn.addEventListener('click', ()=>{
+    if(!confirm('Clear local save and reset all progress? This cannot be undone.')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(NAME_KEY);
+    localStorage.removeItem(LOCK_KEY);
+    // reset state
+    state = { balance:0, totalClicks:0, clickValue:1, cps:0, items:{}, boughtCount:0, lastSave:null };
+    nameInput.disabled = false;
+    setNameBtn.disabled = false;
+    nameInput.value = '';
+    playerNameEl.textContent = 'Guest';
+    saveState();
+    render();
+  });
+
+  // Leaderboard - fetch and post
+  async function fetchLeaderboard(){
+    leaderBoardEl.innerHTML = '<div class="small" style="padding:8px;color:var(--muted)">Loading...</div>';
+    try{
+      const res = await fetch(API_BASE);
+      if(!res.ok) throw new Error('Network error');
+      const data = await res.json();
+      // ensure list sorted desc by score
+      data.sort((a,b)=>Number(b.score) - Number(a.score));
+      renderLeaderboard(data);
+    }catch(e){
+      leaderBoardEl.innerHTML = '<div class="small" style="padding:8px;color:var(--muted)">Unable to load leaderboard.</div>';
+    }
+  }
+
+  function renderLeaderboard(list){
+    leaderBoardEl.innerHTML = '';
+    if(list.length === 0){
+      leaderBoardEl.innerHTML = '<div class="small" style="padding:8px;color:var(--muted)">No entries yet.</div>';
+      return;
+    }
+    // show top 10
+    list.slice(0,10).forEach((row, idx) => {
+      const div = document.createElement('div');
+      div.className = 'lb-row';
+      div.innerHTML = `<div><div class="name">${idx+1}. ${escapeHtml(row.name)}</div><div class="small" style="color:var(--muted)">${new Date(row.createdAt||Date.now()).toLocaleDateString()}</div></div><div style="font-weight:800">${format(Number(row.score)||0)}</div>`;
+      leaderBoardEl.appendChild(div);
+    });
+  }
+
+  async function submitScore(){
+    const name = localStorage.getItem(NAME_KEY) || nameInput.value.trim() || 'Guest';
+    const score = Math.floor(state.balance + state.totalClicks * 0); // using balance as score
+    const payload = { name, score };
+    submitScoreBtn.disabled = true;
+    submitScoreBtn.textContent = 'Submitting...';
+    try{
+      const res = await fetch(API_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if(!res.ok) throw new Error('Failed to submit');
+      showFlash('Score submitted');
+      await fetchLeaderboard();
+    }catch(e){
+      showFlash('Submit failed');
+    }finally{
+      submitScoreBtn.disabled = false;
+      submitScoreBtn.textContent = 'Submit Score';
+    }
+  }
+
+  // helpers
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+  // events
+  refreshLbBtn.addEventListener('click', fetchLeaderboard);
+  submitScoreBtn.addEventListener('click', submitScore);
+
+  // load & init
+  loadState();
+  render();
+  fetchLeaderboard();
+  // initial save timestamp
+  saveState();
+})();
+</script>
+</body>
+</html>
