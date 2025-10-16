@@ -3,132 +3,116 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>NotCoins Clicker — Clean UI</title>
+<title>NotCoins — Dark Clicker</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#f4f7fb;
-    --card:#ffffff;
-    --muted:#65748b;
-    --accent:#1366ff;
-    --success:#10b981;
-    --glass: rgba(99,102,241,0.06);
+    --bg:#071022;
+    --panel:#071726;
+    --muted:#9aa6b5;
+    --accent:#7EE0FF;
+    --glass: rgba(255,255,255,0.03);
+    --glass-2: rgba(255,255,255,0.02);
+    --accent-2:#7CFFB2;
     --radius:12px;
   }
-  *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
-  html,body{height:100%;margin:0;background:var(--bg);color:#0b1b2b;}
-  .container{max-width:1100px;margin:28px auto;padding:20px;display:flex;gap:20px;align-items:flex-start;}
-  .panel{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:0 6px 18px rgba(12,20,36,0.06);flex:1;}
-  .side{width:360px;min-width:300px;}
-  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
-  h1{font-size:18px;margin:0;font-weight:800;color:#071030;}
-  .subtitle{font-size:13px;color:var(--muted);}
-  .status-row{display:flex;gap:12px;align-items:center;margin-bottom:12px;}
-  .large{background:var(--glass);padding:14px;border-radius:10px;flex:1;text-align:center;}
-  .large .num{font-size:26px;font-weight:800;color:var(--accent);margin-bottom:4px;}
-  .small{font-size:13px;color:var(--muted);}
-  .click-area{display:flex;gap:14px;align-items:center;margin-bottom:12px;}
-  .click-btn{flex:1;padding:22px;border-radius:10px;background:linear-gradient(180deg,#1672ff,#0d54d6);color:#fff;font-weight:800;border:0;cursor:pointer;font-size:16px;box-shadow:0 8px 22px rgba(20,60,150,0.08);}
-  .click-meta{width:180px;display:flex;flex-direction:column;gap:8px;}
-  .pill{background:#f1f6ff;padding:8px;border-radius:8px;text-align:center;font-weight:600;color:#06204a;}
-  .shop {display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px;}
-  .item{background:#fbfdff;border:1px solid #eef3ff;padding:12px;border-radius:10px;display:flex;flex-direction:column;gap:8px;}
-  .item .title{font-weight:700;font-size:14px;}
-  .item .desc{font-size:12px;color:var(--muted);}
-  .item-controls{display:flex;justify-content:space-between;align-items:center;margin-top:6px;}
-  .buy-btn{background:var(--accent);border:0;color:#fff;padding:8px 10px;border-radius:8px;font-weight:700;cursor:pointer;}
-  .buy-btn[disabled]{background:#dbe8ff;color:#9cb0e8;cursor:not-allowed;}
-  .controls-row{display:flex;gap:8px;align-items:center;margin-top:10px;}
-  input[type="text"]{padding:8px;border-radius:8px;border:1px solid #e6eefb;background:#fff;min-width:0;flex:1;}
-  .muted{color:var(--muted);font-size:13px;}
-  .leaderboard{background:#fff;padding:12px;border-radius:10px;border:1px solid #eef3ff;max-height:420px;overflow:auto;}
-  .lb-row{display:flex;justify-content:space-between;padding:8px;border-radius:8px;border-bottom:1px solid #f3f6fb;}
-  .lb-row:last-child{border-bottom:0;}
-  .flash{position:fixed;left:50%;transform:translateX(-50%);top:20px;background:#06204a;color:#fff;padding:10px 14px;border-radius:10px;display:none;box-shadow:0 8px 24px rgba(10,20,40,0.12);}
-  footer{margin-top:10px;font-size:12px;color:var(--muted);}
-
-  @media (max-width:900px){
-    .container{flex-direction:column;padding:12px;}
-    .side{width:100%;}
-    .shop{grid-template-columns:1fr;}
-    .click-meta{width:140px;}
+  *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,Arial;}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#041021 0%,#071526 100%);color:#d9eef6}
+  .wrap{max-width:1100px;margin:28px auto;padding:18px;display:grid;grid-template-columns:1fr 340px;gap:18px;}
+  .card{background:linear-gradient(180deg,var(--panel),#051426);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.03);}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  h1{font-size:18px;margin:0;color:var(--accent);letter-spacing:0.2px}
+  .mini{font-size:13px;color:var(--muted)}
+  .status{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+  .balance{padding:12px;border-radius:10px;background:var(--glass);min-width:160px;text-align:center}
+  .balance .num{font-weight:800;font-size:26px;color:var(--accent)}
+  .click-row{display:flex;gap:12px;align-items:center}
+  #clickBtn{flex:1;padding:22px;border-radius:10px;background:linear-gradient(180deg,#0fb0ff,#0a87b8);border:0;color:#012026;font-weight:800;cursor:pointer;font-size:16px}
+  #clickBtn:active{transform:translateY(1px)}
+  .side-info{width:180px;display:flex;flex-direction:column;gap:8px}
+  .pill{background:var(--glass-2);padding:8px;border-radius:8px;text-align:center;color:var(--muted);font-weight:600}
+  .shop{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+  .item{background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);text-align:center}
+  .item .title{font-weight:700;color:var(--accent-2);margin-bottom:6px}
+  .item button{margin-top:6px;padding:6px 8px;border-radius:8px;border:0;background:#0b6b5e;color:#dffcf0;cursor:pointer;font-weight:700}
+  .item button[disabled]{opacity:0.38;cursor:not-allowed;background:#123939}
+  aside{display:flex;flex-direction:column;gap:12px}
+  .leaderboard{max-height:420px;overflow:auto;padding:8px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);border:1px solid rgba(255,255,255,0.02)}
+  .lb-row{display:flex;justify-content:space-between;padding:8px;border-radius:6px}
+  .controls{display:flex;gap:8px;align-items:center}
+  input[type="text"]{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+  button.simple{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--accent);cursor:pointer}
+  .flash{position:fixed;left:50%;transform:translateX(-50%);top:18px;background:#04202a;padding:8px 12px;border-radius:8px;color:var(--accent-2);display:none;z-index:999}
+  .tiny{font-size:12px;color:var(--muted)}
+  @media (max-width:960px){
+    .wrap{grid-template-columns:1fr;padding:12px}
+    .shop{grid-template-columns:repeat(2,1fr)}
+    aside{order:-1}
   }
 </style>
 </head>
 <body>
-<div class="container">
-  <main class="panel">
+<div class="wrap">
+  <main class="card">
     <header>
-      <div>
-        <h1>NotCoins Clicker</h1>
-        <div class="subtitle">Click to earn NotCoins — name locks after set</div>
-      </div>
-      <div class="small">Auto-refresh every 2s • Auto-submit every 2s</div>
+      <h1>NotCoins</h1>
+      <div class="mini">dark • auto 2s</div>
     </header>
 
-    <div class="status-row">
-      <div class="large">
-        <div class="small">Balance</div>
+    <div class="status">
+      <div class="balance">
+        <div class="tiny">Balance</div>
         <div id="balance" class="num">0</div>
-        <div class="small">CPS: <span id="cps">0</span> • Click: <span id="clickVal">1</span></div>
+        <div class="tiny">CPS <span id="cps">0</span> • Click <span id="clickVal">1</span></div>
       </div>
-      <div style="width:220px;display:flex;flex-direction:column;gap:8px;">
-        <div class="pill">Player: <span id="playerName" style="font-weight:800;margin-left:6px">Guest</span></div>
-        <div class="pill">Clicks: <span id="totalClicks" style="font-weight:800;margin-left:6px">0</span></div>
-      </div>
-    </div>
 
-    <div class="click-area">
-      <button id="clickBtn" class="click-btn">Tap to earn NotCoins</button>
-      <div class="click-meta">
-        <div class="muted">Per click</div>
-        <div class="pill" id="perClick">1</div>
-        <div class="muted" style="margin-top:8px">Owned items: <span id="ownedItems">0</span></div>
-      </div>
-    </div>
-
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <div class="muted">Shop</div>
-      <div class="muted">Saved locally • <span id="saveStateText">never</span></div>
-    </div>
-
-    <div class="shop" id="shopList" aria-live="polite"></div>
-
-    <footer>
-      Tip: Clearing local storage will reset progress and unlock the player name.
-    </footer>
-  </main>
-
-  <aside class="panel side">
-    <div style="display:flex;flex-direction:column;gap:12px;">
-      <div>
-        <div class="muted">Account</div>
-        <div class="controls-row" style="margin-top:8px">
-          <input id="nameInput" type="text" placeholder="Enter player name" />
-          <button id="setNameBtn" class="buy-btn">Set</button>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div class="tiny">Player <strong id="playerName">Guest</strong></div>
+          <div class="tiny">Clicks <span id="totalClicks">0</span></div>
         </div>
-        <div class="muted" style="margin-top:6px">Name is locked after setting on this browser.</div>
-      </div>
 
-      <div>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div class="muted">Leaderboard</div>
-          <div style="display:flex;gap:8px">
-            <button id="refreshLb" class="buy-btn" style="background:#e6eefb;color:#06204a;border:1px solid #d9e6ff">Refresh</button>
-            <button id="submitScore" class="buy-btn">Submit</button>
+        <div class="click-row">
+          <button id="clickBtn">Tap • +<span id="perClick">1</span></button>
+          <div class="side-info">
+            <div class="pill" id="ownedItems">0 items</div>
+            <div class="pill tiny" id="saveStateText">saved: never</div>
           </div>
         </div>
-        <div class="leaderboard" id="leaderboard" style="margin-top:10px"></div>
       </div>
+    </div>
 
-      <div style="display:flex;gap:8px;">
-        <button id="clearLocal" class="buy-btn" style="background:#fff;border:1px solid #f0f3f9;color:#06204a">Clear Local</button>
-        <div style="flex:1" class="muted" id="autoStatus">Auto-refresh: On • Auto-submit: On</div>
-      </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+      <div class="tiny">Shop</div>
+      <div class="tiny">Auto-update: On (2s)</div>
+    </div>
 
-      <div class="muted" style="font-size:12px;margin-top:6px;">
-        Remote leaderboard: https://68eeed86b06cc802829ba196.mockapi.io/leaderboardclicker
+    <div id="shopList" class="shop" aria-live="polite"></div>
+  </main>
+
+  <aside class="card">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="tiny">Name</div>
+      <div class="controls">
+        <input id="nameInput" placeholder="set name" />
+        <button id="setNameBtn" class="simple">Set</button>
       </div>
+    </div>
+
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="tiny">Leaderboard</div>
+        <div style="display:flex;gap:8px">
+          <button id="refreshLb" class="simple">Refresh</button>
+          <button id="submitBtn" class="simple">Update</button>
+        </div>
+      </div>
+      <div id="leaderboard" class="leaderboard" style="margin-top:8px"></div>
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="clearLocal" class="simple">Clear</button>
+      <div class="tiny">minimal UI • dark</div>
     </div>
   </aside>
 </div>
@@ -137,40 +121,24 @@
 
 <script>
 (() => {
-  const API_BASE = 'https://68eeed86b06cc802829ba196.mockapi.io/leaderboardclicker';
-  const STORAGE_KEY = 'notcoins_state_v3';
-  const NAME_KEY = 'notcoins_player_v3';
-  const LOCK_KEY = 'notcoins_name_locked_v3';
-  const LAST_SUBMIT_KEY = 'notcoins_last_submitted_v3';
+  const API = 'https://68eeed86b06cc802829ba196.mockapi.io/leaderboardclicker';
+  const STORAGE = 'notcoins_dark_v1';
+  const NAME_KEY = 'notcoins_name_v1';
+  const LOCK_KEY = 'notcoins_name_lock_v1';
+  const LAST_SUB_KEY = 'notcoins_last_sub_v1';
+  const REFRESH_MS = 2000;
 
-  // Intervals set to every 2 seconds per request
-  const LEADERBOARD_REFRESH_MS = 2000;
-  const AUTO_SUBMIT_MS = 2000;
-
-  // state
-  let state = {
-    balance: 0,
-    totalClicks: 0,
-    clickValue: 1,
-    cps: 0,
-    items: {},
-    lastSave: null
-  };
-
-  // shop (expanded)
-  const shopItems = [
-    { id:'cursor', name:'Cursor', desc:'+1 per click', basePrice:15, type:'click', value:1 },
-    { id:'auto', name:'Auto-Clicker', desc:'+0.5 CPS', basePrice:80, type:'cps', value:0.5 },
-    { id:'grandma', name:'Grandma', desc:'+2 CPS', basePrice:140, type:'cps', value:2 },
-    { id:'miner', name:'Miner', desc:'+9 CPS', basePrice:700, type:'cps', value:9 },
-    { id:'factory', name:'Factory', desc:'+45 CPS', basePrice:3500, type:'cps', value:45 },
-    { id:'bank', name:'Bank', desc:'+250 CPS', basePrice:18000, type:'cps', value:250 },
-    { id:'mult_small', name:'Tiny Mult', desc:'x1.2 click', basePrice:500, type:'mult', value:1.2 },
-    { id:'mult_med', name:'Booster', desc:'x1.5 click', basePrice:3000, type:'mult', value:1.5 },
-    { id:'mult_big', name:'Quantum', desc:'x2 click', basePrice:15000, type:'mult', value:2 },
-    { id:'research', name:'Research', desc:'-5% prices (stack)', basePrice:9000, type:'discount', value:0.05 }
+  const shop = [
+    {id:'cursor', name:'Cursor', price:15, type:'click', val:1},
+    {id:'auto', name:'Auto', price:80, type:'cps', val:0.5},
+    {id:'grandma', name:'Grandma', price:140, type:'cps', val:2},
+    {id:'miner', name:'Miner', price:700, type:'cps', val:9},
+    {id:'mult', name:'Booster', price:500, type:'mult', val:1.2}
   ];
-  const PRICE_SCALE = 1.17;
+  const SCALE = 1.15;
+
+  let state = { balance:0, clicks:0, clickValue:1, cps:0, items:{}, lastSave:null };
+  let lbCache = []; // last fetched leaderboard
 
   // DOM
   const balanceEl = document.getElementById('balance');
@@ -186,277 +154,221 @@
   const nameInput = document.getElementById('nameInput');
   const setNameBtn = document.getElementById('setNameBtn');
   const leaderboardEl = document.getElementById('leaderboard');
-  const refreshLbBtn = document.getElementById('refreshLb');
-  const submitScoreBtn = document.getElementById('submitScore');
-  const clearLocalBtn = document.getElementById('clearLocal');
+  const refreshBtn = document.getElementById('refreshLb');
+  const submitBtn = document.getElementById('submitBtn');
+  const clearBtn = document.getElementById('clearLocal');
   const flashEl = document.getElementById('flash');
-  const autoStatusEl = document.getElementById('autoStatus');
 
-  let lbInterval = null;
-  let submitInterval = null;
-
-  // helpers
-  function showFlash(msg, t=1800){
+  function flash(msg, t=1400){
     flashEl.textContent = msg;
     flashEl.style.display = 'block';
     setTimeout(()=> flashEl.style.display = 'none', t);
   }
 
-  function loadState(){
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){
-      try{ Object.assign(state, JSON.parse(raw)); }catch(e){}
-    }
+  function load(){
+    const raw = localStorage.getItem(STORAGE);
+    if(raw) Object.assign(state, JSON.parse(raw));
     const name = localStorage.getItem(NAME_KEY);
-    const locked = localStorage.getItem(LOCK_KEY);
-    if(name){ playerNameEl.textContent = name; nameInput.value = name; }
-    if(locked === '1'){ nameInput.disabled = true; setNameBtn.disabled = true; }
+    if(name){ playerNameEl.textContent = name; nameInput.value = name; nameInput.disabled = localStorage.getItem(LOCK_KEY) === '1'; setNameBtn.disabled = localStorage.getItem(LOCK_KEY) === '1'; }
     applyDerived();
   }
 
-  function saveState(){
+  function save(){
     state.lastSave = Date.now();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(STORAGE, JSON.stringify(state));
     saveStateText.textContent = new Date(state.lastSave).toLocaleTimeString();
   }
 
   function format(n){
     if(!isFinite(n)) return '0';
-    if(n>=1e12) return (n/1e12).toFixed(2)+'T';
     if(n>=1e9) return (n/1e9).toFixed(2)+'B';
     if(n>=1e6) return (n/1e6).toFixed(2)+'M';
     if(n>=1e3) return (n/1e3).toFixed(2)+'k';
     return Math.round(n).toString();
   }
 
-  function getCount(id){ return state.items[id]||0; }
-
-  function calcPrice(id){
-    const item = shopItems.find(i=>i.id===id);
-    const count = getCount(id);
-    let price = Math.floor(item.basePrice * Math.pow(PRICE_SCALE, count));
-    const researchCount = getCount('research');
-    if(researchCount>0){
-      const totalDisc = 1 - Math.pow(1 - shopItems.find(i=>i.id==='research').value, researchCount);
-      price = Math.max(1, Math.floor(price * (1 - totalDisc)));
-    }
-    return price;
+  function itemCount(id){ return state.items[id] || 0; }
+  function price(id){
+    const base = shop.find(s=>s.id===id).price;
+    const cnt = itemCount(id);
+    return Math.max(1, Math.floor(base * Math.pow(SCALE, cnt)));
   }
 
   function applyDerived(){
-    // recalc cps if needed (sum of cps item values)
+    // recalc cps from purchased cps items
     let cps = 0;
-    shopItems.forEach(it=>{
-      if(it.type === 'cps'){
-        cps += (getCount(it.id) * it.value);
-      } else if(it.type === 'cps' && it.mult) {
-        cps *= it.mult;
-      }
+    shop.forEach(s=>{
+      if(s.type === 'cps') cps += (itemCount(s.id) * s.val);
     });
-    state.cps = (state.cps && state.cps>0) ? state.cps : cps; // allow persistent cps from purchases
+    state.cps = Math.max(state.cps, cps);
   }
 
-  // render UI
   function render(){
     balanceEl.textContent = format(state.balance);
     cpsEl.textContent = format(state.cps);
-    perClickEl.textContent = (state.clickValue % 1 === 0) ? state.clickValue : state.clickValue.toFixed(2);
-    totalClicksEl.textContent = format(state.totalClicks);
-    ownedItemsEl.textContent = Object.values(state.items).reduce((a,b)=>a+b,0);
+    clickValEl.textContent = +(state.clickValue.toFixed(2));
+    perClickEl.textContent = +(state.clickValue.toFixed(2));
+    totalClicksEl.textContent = format(state.clicks);
+    ownedItemsEl.textContent = Object.values(state.items).reduce((a,b)=>a+b,0) + ' items';
     saveStateText.textContent = state.lastSave ? new Date(state.lastSave).toLocaleTimeString() : 'never';
     playerNameEl.textContent = localStorage.getItem(NAME_KEY) || 'Guest';
 
-    // shop
     shopListEl.innerHTML = '';
-    shopItems.forEach(it=>{
-      const price = calcPrice(it.id);
-      const count = getCount(it.id);
-      const div = document.createElement('div');
-      div.className = 'item';
-      div.innerHTML = `
-        <div>
-          <div class="title">${it.name} <span style="font-weight:600;color:#94a3b8;font-size:12px">x${count}</span></div>
-          <div class="desc">${it.desc}</div>
-        </div>
-        <div class="item-controls">
-          <div class="muted">${format(price)} NC</div>
-          <button class="buy-btn" data-id="${it.id}">Buy</button>
-        </div>
-      `;
-      const btn = div.querySelector('button');
-      if(state.balance < price) btn.disabled = true;
-      btn.addEventListener('click', ()=> buyItem(it.id));
-      shopListEl.appendChild(div);
+    shop.forEach(s=>{
+      const btnDisabled = state.balance < price(s.id);
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.innerHTML = `<div class="title">${s.name} <span style="font-weight:600;color:#89a6b3;font-size:12px">x${itemCount(s.id)}</span></div>
+                      <div style="font-size:12px;color:var(--muted)">${s.type === 'mult' ? 'multiplier' : s.type}</div>
+                      <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+                        <div class="tiny" style="color:var(--muted)">${format(price(s.id))} NC</div>
+                        <button ${btnDisabled ? 'disabled':''} data-id="${s.id}">Buy</button>
+                      </div>`;
+      const btn = el.querySelector('button');
+      btn.addEventListener('click', ()=> buy(s.id));
+      shopListEl.appendChild(el);
     });
-
-    autoStatusEl.textContent = `Auto-refresh: On (${LEADERBOARD_REFRESH_MS/1000}s) • Auto-submit: On (${AUTO_SUBMIT_MS/1000}s)`;
   }
 
-  // actions
-  function clickAction(){
-    state.balance += state.clickValue;
-    state.totalClicks += 1;
-    saveState();
+  function buy(id){
+    const s = shop.find(x=>x.id===id);
+    const p = price(id);
+    if(state.balance < p) return;
+    state.balance -= p;
+    state.items[id] = itemCount(id) + 1;
+    if(s.type === 'click') state.clickValue = +(state.clickValue + s.val);
+    else if(s.type === 'cps') state.cps = +(state.cps + s.val);
+    else if(s.type === 'mult') state.clickValue = +(state.clickValue * s.val);
+    applyDerived();
+    save();
     render();
+    flash('Bought ' + s.name);
   }
 
-  function buyItem(id){
-    const item = shopItems.find(i=>i.id===id);
-    const price = calcPrice(id);
-    if(state.balance < price) return;
-    state.balance -= price;
-    state.items[id] = getCount(id) + 1;
-
-    // apply effects
-    if(item.type === 'click'){
-      state.clickValue = +(state.clickValue + item.value).toFixed(6);
-    } else if(item.type === 'cps'){
-      state.cps = +(state.cps + item.value).toFixed(6);
-    } else if(item.type === 'mult'){
-      state.clickValue = +(state.clickValue * item.value).toFixed(6);
-    } else if(item.type === 'discount'){
-      // price effect handled in calcPrice
-    }
-    saveState();
-    render();
-    showFlash('Purchased ' + item.name);
-  }
-
-  // CPS tick: every 1 second (keeps earnings smooth)
-  setInterval(()=>{
-    if(state.cps > 0){
-      state.balance += state.cps;
-      saveState();
-      render();
-    }
-  }, 1000);
-
-  // auto save
-  setInterval(()=> saveState(), 5000);
-
-  // click binding
   clickBtn.addEventListener('click', ()=>{
-    clickAction();
-    clickBtn.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}],{duration:160});
+    state.balance += state.clickValue;
+    state.clicks += 1;
+    save();
+    render();
   });
 
-  // name controls (lock)
   setNameBtn.addEventListener('click', ()=>{
     const v = nameInput.value.trim();
-    if(!v){ showFlash('Enter a name'); return; }
-    if(localStorage.getItem(LOCK_KEY) === '1'){ showFlash('Name locked — cannot change'); return; }
+    if(!v) { flash('enter name'); return; }
+    if(localStorage.getItem(LOCK_KEY) === '1'){ flash('name locked'); return; }
     localStorage.setItem(NAME_KEY, v);
     localStorage.setItem(LOCK_KEY, '1');
     nameInput.disabled = true;
     setNameBtn.disabled = true;
-    showFlash('Name set: ' + v);
-    render();
+    playerNameEl.textContent = v;
+    flash('name set');
   });
 
-  // clear local
-  clearLocalBtn.addEventListener('click', ()=>{
-    if(!confirm('Clear local save and reset progress?')) return;
-    localStorage.removeItem(STORAGE_KEY);
+  clearBtn.addEventListener('click', ()=>{
+    if(!confirm('Clear local save?')) return;
+    localStorage.removeItem(STORAGE);
     localStorage.removeItem(NAME_KEY);
     localStorage.removeItem(LOCK_KEY);
-    localStorage.removeItem(LAST_SUBMIT_KEY);
-    state = { balance:0, totalClicks:0, clickValue:1, cps:0, items:{}, lastSave:null };
+    localStorage.removeItem(LAST_SUB_KEY);
+    state = { balance:0, clicks:0, clickValue:1, cps:0, items:{}, lastSave:null };
     nameInput.disabled = false;
     setNameBtn.disabled = false;
     nameInput.value = '';
-    saveState();
+    save();
     render();
-    showFlash('Local save cleared');
+    flash('cleared');
   });
 
-  // Leaderboard
-  async function fetchLeaderboard(){
-    leaderboardEl.innerHTML = '<div class="muted" style="padding:8px">Loading...</div>';
+  // Leaderboard operations
+  async function fetchLB(){
     try{
-      const res = await fetch(API_BASE);
-      if(!res.ok) throw new Error('Network error');
+      const res = await fetch(API);
+      if(!res.ok) throw new Error('err');
       const data = await res.json();
-      data.sort((a,b)=>Number(b.score) - Number(a.score));
-      renderLeaderboard(data.slice(0, 20));
+      data.sort((a,b)=>Number(b.score)-Number(a.score));
+      lbCache = data;
+      renderLB(data.slice(0,20));
+      return data;
     }catch(e){
-      leaderboardEl.innerHTML = '<div class="muted" style="padding:8px">Unable to load leaderboard</div>';
+      leaderboardEl.innerHTML = '<div class="tiny">unable to load</div>';
+      return [];
     }
   }
 
-  function renderLeaderboard(rows){
+  function renderLB(list){
     leaderboardEl.innerHTML = '';
-    if(!rows || rows.length === 0){
-      leaderboardEl.innerHTML = '<div class="muted">No entries yet</div>';
-      return;
-    }
-    rows.forEach((r, idx)=>{
-      const div = document.createElement('div');
-      div.className = 'lb-row';
-      div.innerHTML = `<div style="font-weight:700">${idx+1}. ${escapeHtml(r.name)}</div><div class="muted">${format(Number(r.score)||0)}</div>`;
-      leaderboardEl.appendChild(div);
+    if(!list.length){ leaderboardEl.innerHTML = '<div class="tiny">no entries</div>'; return; }
+    list.forEach((r, i)=>{
+      const d = document.createElement('div');
+      d.className = 'lb-row';
+      d.innerHTML = `<div style="font-weight:700">${i+1}. ${escape(r.name)}</div><div class="tiny">${format(Number(r.score)||0)}</div>`;
+      leaderboardEl.appendChild(d);
     });
   }
 
-  // submit once if improved
-  async function submitScoreOnce(){
-    const name = localStorage.getItem(NAME_KEY) || nameInput.value.trim() || 'Guest';
-    const score = Math.floor(state.balance);
-    const last = Number(localStorage.getItem(LAST_SUBMIT_KEY) || 0);
-    if(score <= last) return false;
+  async function tryUpdateScoreIfExists(){
+    const name = localStorage.getItem(NAME_KEY) || nameInput.value.trim();
+    if(!name) return;
+    // ensure we have fresh LB cache; we will fetch once per cycle anyway
+    const list = lbCache.length ? lbCache : (await fetchLB());
+    const existing = list.find(e => e.name === name);
+    if(!existing) return; // do not create new entry per user's request
+    const currentScore = Math.floor(state.balance);
+    if(currentScore <= Number(existing.score)) return;
+    // update via PUT
     try{
-      const res = await fetch(API_BASE, {
-        method: 'POST',
+      const res = await fetch(API + '/' + existing.id, {
+        method: 'PUT',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ name, score })
+        body: JSON.stringify({ name, score: currentScore, date: new Date().toISOString() })
       });
-      if(!res.ok) throw new Error('submit failed');
-      localStorage.setItem(LAST_SUBMIT_KEY, String(score));
-      return true;
+      if(!res.ok) throw new Error('put fail');
+      localStorage.setItem(LAST_SUB_KEY, String(currentScore));
+      flash('score updated');
+      await fetchLB();
     }catch(e){
-      return false;
+      // silently ignore
     }
   }
 
-  // manual submit
-  submitScoreBtn.addEventListener('click', async ()=>{
-    submitScoreBtn.disabled = true;
-    submitScoreBtn.textContent = 'Submitting...';
-    const ok = await submitScoreOnce();
-    if(ok){ showFlash('Score submitted'); await fetchLeaderboard(); }
-    else showFlash('Submit failed or no improvement');
-    submitScoreBtn.disabled = false;
-    submitScoreBtn.textContent = 'Submit';
+  // Manual update button: will update only if entry exists
+  submitBtn.addEventListener('click', async ()=>{
+    submitBtn.disabled = true;
+    await fetchLB();
+    await tryUpdateScoreIfExists();
+    submitBtn.disabled = false;
   });
 
-  // manual refresh
-  refreshLbBtn.addEventListener('click', fetchLeaderboard);
+  refreshBtn.addEventListener('click', fetchLB);
 
-  // auto intervals (every 2 seconds per request)
-  function startAuto(){
-    if(lbInterval) clearInterval(lbInterval);
-    if(submitInterval) clearInterval(submitInterval);
-    lbInterval = setInterval(fetchLeaderboard, LEADERBOARD_REFRESH_MS);
-    submitInterval = setInterval(async ()=>{
-      const ok = await submitScoreOnce();
-      if(ok){
-        showFlash('Auto-submitted improved score', 1400);
-        fetchLeaderboard();
-      }
-    }, AUTO_SUBMIT_MS);
+  // Auto loop every REFRESH_MS: refresh leaderboard, then try update (if entry exists and improved)
+  async function autoLoop(){
+    await fetchLB();
+    await tryUpdateScoreIfExists();
   }
 
-  // helpers
-  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  // utility
+  function escape(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
   // init
-  loadState();
+  load();
   render();
-  fetchLeaderboard();
-  saveState();
-  startAuto();
+  fetchLB();
+  save();
+  setInterval(autoLoop, REFRESH_MS);
 
-  // persist on unload
-  window.addEventListener('beforeunload', saveState);
+  // keep CPS earnings every second
+  setInterval(()=>{
+    if(state.cps > 0){
+      state.balance += state.cps;
+      save();
+      render();
+    }
+  }, 1000);
+
+  // save periodically
+  setInterval(save, 5000);
+  window.addEventListener('beforeunload', save);
 })();
 </script>
 </body>
